@@ -9,6 +9,7 @@ Primary controller configured with this script is Jeedom - but it can easily be 
 Jeedom http API is used to control tag widgets<br/>
 This script can run either on the same Raspberry PI as Jeedom or on another Raspberry PI allowing to have the BT adapter placed anywhere in the house<br/>
 This script is intended to run in CLI mode as a background daemon (via pcntl_fork())<br/>
+$ php BLEDaemon.php<br/>
 
 *	Configuration:<br/>
 Debug mode is selected when an instance of this class is created $ble = new BLE(debug_mode)<br/>
