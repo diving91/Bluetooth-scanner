@@ -29,7 +29,8 @@ For each registered BT devices, the IDs for on & off jeedom cmd will be asked an
 
 * Optionally a log file is generated to keep track of devices entering or levaing the adapter scan range<br/>
 
-* More information via Jeedom forum<br/>
+* More information via Jeedom forum (Fench Forum)<br/>
+https://www.jeedom.com/forum/viewtopic.php?f=31&t=25492<br/>
 User: diving91<br/>
 
 <img src=https://github.com/diving91/Bluetooth-scanner/blob/master/onTag.png>
