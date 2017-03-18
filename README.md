@@ -1,5 +1,5 @@
 # Bluetooth-scanner
-BT (LE or not) scanner for Jeedom automation Framework
+BT (LE or not) scanner for Jeedom home automation Framework
 
 * Class BLE purpose: Scan Bluetooth devices on the network and notify a controller when registered devices are in range<br/>
 
