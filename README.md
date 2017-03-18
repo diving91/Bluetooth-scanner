@@ -33,5 +33,4 @@ For each registered BT devices, the IDs for on & off jeedom cmd will be asked an
 https://www.jeedom.com/forum/viewtopic.php?f=31&t=25492<br/>
 User: diving91<br/>
 
-<img src=https://github.com/diving91/Bluetooth-scanner/blob/master/onTag.png>
-<img src=https://github.com/diving91/Bluetooth-scanner/blob/master/offTag.png>
+<img src=https://github.com/diving91/Bluetooth-scanner/blob/master/onTag.png> <img src=https://github.com/diving91/Bluetooth-scanner/blob/master/offTag.png>
