@@ -13,7 +13,7 @@ $ php BLEDaemon.php<br/>
 
 *	Configuration:<br/>
 Debug mode is selected when an instance of this class is created $ble = new BLE(debug_mode)<br/>
-It is adviced to start in debug mode to check evything is fine, then turn debug off<br/>
+It is advised to start in debug mode to check everything is fine, then turn debug off<br/>
 BT LE or normal BT is defined with 'scan' or 'lescan' in $_scanType private variable<br/>
 
 *	Tested with:<br/>
@@ -25,11 +25,11 @@ Bluetooth adapter: https://goo.gl/e52VTZ<br/>
 * Link with the controller<br/>
 Define a widget with on & off cmd IDs to control the widget via Jeedom http API<br/>
 When started in configuration mode, the script will ask for the list of BT devices to monitor (via their BT Mac address)<br/>
-For each registered BT devices, the IDs for on & off jeedom cmd will be asked and stored into a BLE.ini file<br/>
+For each registered BT devices, the IDs for on & off Jeedom cmd will be asked and stored into a BLE.ini file<br/>
 
 * Optionally a log file is generated to keep track of devices entering or leaving the adapter scan range<br/>
 
-* More information via Jeedom forum (Fench Forum)<br/>
+* More information via Jeedom forum (French Forum)<br/>
 https://www.jeedom.com/forum/viewtopic.php?f=31&t=25492<br/>
 User: diving91<br/>
 
