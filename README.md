@@ -17,7 +17,7 @@ It is advised to start in debug mode to check everything is fine, then turn debu
 BT LE or normal BT is defined with 'scan' or 'lescan' in $_scanType private variable<br/>
 
 *	Tested with:<br/>
-Raspberry PI 2 - Raspian Jessie<br/>
+Raspberry PI 2 - Raspbian Jessie<br/>
 BT LE tags: https://goo.gl/KoQUb3<br/>
 BT non LE device: Samsung Galaxy S5<br/>
 Bluetooth adapter: https://goo.gl/e52VTZ<br/>
