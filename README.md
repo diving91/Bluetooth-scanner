@@ -18,8 +18,8 @@ BT LE or normal BT is defined with 'scan' or 'lescan' in $_scanType private vari
 
 *	Tested with:<br/>
 Raspberry PI 2 - Raspbian Jessie<br/>
-BT LE tags: https://goo.gl/KoQUb3<br/>
-BT non LE device: Samsung Galaxy S5<br/>
+BT LE tags: https://goo.gl/KoQUb3 (Work in Progress)<br/>
+BT non LE device: Samsung Galaxy S5, LG G3, iPhone 6s<br/>
 Bluetooth adapter: https://goo.gl/e52VTZ<br/>
 
 * Link with the controller<br/>
