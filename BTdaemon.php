@@ -261,7 +261,8 @@ class BTScanner {
 		unset($r);
 		exec("$hciconfig -a $adapter",$r);
 		//$this->dbg(print_r($r,true));
-		if (@trim($r[2]) != "UP RUNNING") {die("ERROR $adapter adapter not running, use: sudo hciconfig $adapter up\n");}
+		$t = explode(" ",trim($r[2]));
+		if (!in_array("UP",$t) || !in_array("RUNNING",$t)) {die("ERROR $adapter adapter not running, use: sudo hciconfig $adapter up\n");}		
 		$this->dbg("Bluetooth adapter UP & RUNNING\n");
 	}
 
