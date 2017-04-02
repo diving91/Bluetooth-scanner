@@ -36,6 +36,7 @@
 *	Configuration:
 *	Debug mode is selected when an instance of this class is created $bt = new BTScanner(debug_mode)
 *	It is adviced to start in debug mode to check evything is fine, then turn debug off
+*	Before a device is considered as absent, it must be undetected during an adjustable timeout ($_timeOut)
 *
 *	Tested with:
 *	Raspberry PI 2 - Raspian Jessie / Should be Ok for PI 3 with built-in Bluetooth as well
@@ -51,11 +52,12 @@ class BTScanner {
 	private $_adapter; 		// BT adapter eg: hci0
 	private $_jeedomurl;		// Base URL jeedom API 
 	private $_log;			// Boolean to log BT ativity in $_logfile
-	private $_tags;			// Array of BT tags with the parameter BT MAC,Jeedom CmdON,Jeedom CmdOFF
+	private $_tags;			// Array of BT tags with the parameter BT MAC,Jeedom CmdON,Jeedom CmdOFF,State (0=absent,1=present,x=timestamp since not detected)
 
 	private $_hcitool;		// Path to hcitool
 	
 	private $_loopTime = 2;		// BT scan loop time
+	private $_timeOut = 120;	// Time is seconds before a tag is considered as absent
 	private $_debug;		// For debug purpose - Settled at Class construct time
 
 	public function __construct($debug = false) {
@@ -79,15 +81,19 @@ class BTScanner {
 			while (true) {
 				foreach ($this->_tags as $key=>$device) {
 					$x = exec("sudo $this->_hcitool -i $this->_adapter name $key");
-					if (empty($x) and $device['state'] == true) {
+					if (empty($x) and $device['state'] == 1) { // device not found and marked as present
+						$this->_tags[$key]['state'] = time();
+					}
+					else if (empty($x) and ((time() - $device['state']) > $this->_timeOut) and $device['state'] != 0) { // device not found and marked as timestamp transition
 						$this->callJedoomUrl($device['off']);
-						$this->_tags[$key]['state'] = false;
+						$this->_tags[$key]['state'] = 0;
 						$this->dbg("Inactive Tag found: $key\n");
 						$this->log("$key inactive\n");
+
 					}
-					else if (!empty($x) and $device['state'] == false) {
+					else if (!empty($x) and $device['state'] != 1) { // device found and marked as not present
 						$this->callJedoomUrl($device['on']);
-						$this->_tags[$key]['state'] = true;
+						$this->_tags[$key]['state'] = 1;
 						$this->dbg("Active Tag found: $key\n");
 						$this->log("$key ACTIVE\n");
 					}
@@ -221,10 +227,10 @@ class BTScanner {
 		// http://192.168.1.xxx/core/api/jeeApi.php?apikey=yourkey&type=cmd&id=77
 		$this->_jeedomurl = "http://".$config['Jeedom IP']['ip']."/core/api/jeeApi.php?apikey=".$config['Jeedom Key']['key']."&type=cmd&id=";
 		$this->_log =$config['logs']['log']; 
-		// For each tag array[mac] = array(ID on, ID Off, State) - State by default set to false
+		// For each tag array[mac] = array(ID on, ID Off, State) - State by default set to 0 (absent)
 		foreach ($config['TAGS'] as $tag) {
 			$tagData = explode(",",$tag);
-			$this->_tags[$tagData[0]] = array("on" => $tagData[1], "off" => $tagData[2],"state" => false);
+			$this->_tags[$tagData[0]] = array("on" => $tagData[1], "off" => $tagData[2],"state" => 0);
 		}
 		$nbTags = count($this->_tags);
 		$this->dbg("Adapter: $this->_adapter\n");
