@@ -81,17 +81,20 @@ class BTScanner {
 			while (true) {
 				foreach ($this->_tags as $key=>$device) {
 					$x = exec("sudo $this->_hcitool -i $this->_adapter name $key");
-					if (empty($x) and $device['state'] == 1) { // device not found and marked as present
+					// device not found and marked as present
+					if (empty($x) and $device['state'] == 1) {
 						$this->_tags[$key]['state'] = time();
 					}
-					else if (empty($x) and ((time() - $device['state']) > $this->_timeOut) and $device['state'] != 0) { // device not found and marked as timestamp transition
+					// device not found and marked as timestamp transition
+					else if (empty($x) and ((time() - $device['state']) > $this->_timeOut) and $device['state'] != 0) {
 						$this->callJedoomUrl($device['off']);
 						$this->_tags[$key]['state'] = 0;
 						$this->dbg("Inactive Tag found: $key\n");
 						$this->log("$key inactive\n");
 
 					}
-					else if (!empty($x) and $device['state'] != 1) { // device found and marked as not present
+					// device found and marked as not present
+					else if (!empty($x) and $device['state'] == 0) {
 						$this->callJedoomUrl($device['on']);
 						$this->_tags[$key]['state'] = 1;
 						$this->dbg("Active Tag found: $key\n");
