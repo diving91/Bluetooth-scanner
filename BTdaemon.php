@@ -26,10 +26,10 @@
 */
 
 /*
-* Class BTScanner purpose: Scan Bluetooth devices on the network and notify a controller when registered devices are in range
+* Class BTScanner purpose: Scan Bluetooth devices (BLE or not) on the network and notify a controller when registered devices are in range
 *	Controller is any system having an http API to settle devices ON & OFF
 *	Primary controller configured with this script is Jeedom - but it can easily be adapted
-*	Jeedom http API is used to control BTtag widgets
+*	Jeedom http API is used to control Bluetooth device widgets
 *	This script can run either on the same Raspberry PI as Jeedom or on another Raspberry PI allowing to have the BT adapter placed anywhere in the house
 *	This script is intended to run in CLI mode as a background daemon (via pcntl_fork())
 *
@@ -41,6 +41,8 @@
 *	Tested with:
 *	Raspberry PI 2 - Raspian Jessie / Should be Ok for PI 3 with built-in Bluetooth as well
 *	BT devices: Samsung Galaxy S5 & LG G3 & iPhone 6s
+*	BLE devices: Nut mini (https://goo.gl/l36Gtz)
+* 	Does NOT work with iTags (https://goo.gl/ENNL71): Since those devices are switching off when not connected, they can't be used for presence detection
 *	Bluetooth adapter: https://goo.gl/e52VTZ
 *
 */
@@ -56,8 +58,8 @@ class BTScanner {
 
 	private $_hcitool;		// Path to hcitool
 	
-	private $_loopTime = 2;		// BT scan loop time
-	private $_timeOut = 120;	// Time is seconds before a tag is considered as absent
+	private $_loopTime = 5;		// BT scan loop time
+	private $_timeOut = 300;	// Time is seconds before a tag is considered as absent - Use large value to avoid false absence detection
 	private $_debug;		// For debug purpose - Settled at Class construct time
 
 	public function __construct($debug = false) {
@@ -80,7 +82,8 @@ class BTScanner {
 			$this->dbg("children - ".getmypid()."\n");
 			while (true) {
 				foreach ($this->_tags as $key=>$device) {
-					$x = exec("sudo $this->_hcitool -i $this->_adapter name $key");
+					if ($device['ble'] == 1) $x = exec("sudo timeout -s SIGINT 3s $this->_hcitool -i $this->_adapter lescan | grep -c $key");
+					else $x = exec("sudo $this->_hcitool -i $this->_adapter name $key");
 					// device not found and marked as present
 					if (empty($x) and $device['state'] == 1) {
 						$this->_tags[$key]['state'] = time();
@@ -91,7 +94,6 @@ class BTScanner {
 						$this->_tags[$key]['state'] = 0;
 						$this->dbg("Inactive Tag found: $key\n");
 						$this->log("$key inactive\n");
-
 					}
 					// device found and marked as not present
 					else if (!empty($x) and $device['state'] == 0) {
@@ -178,7 +180,7 @@ class BTScanner {
 				echo "Select Jeedom cmd id ON (0,1,2,...): ";
 				$r = $this->readline();
 				if (!ctype_digit($r)) {
-					echo "ERROr: Bad Jeedom cmd id ON\n";
+					echo "ERROR: Bad Jeedom cmd id ON\n";
 					$loop = true;
 				}
 			} while ($loop);
@@ -191,6 +193,25 @@ class BTScanner {
 				if (!ctype_digit($r)) {
 					echo "ERROr: Bad Jeedom cmd id OFF\n";
 					$loop = true;
+				}
+			} while ($loop);
+			$str .= ",".$r;
+			// Select BT or BLE device
+			do {
+
+				echo "Select Device Type (BT/BLE): ";
+				$r = $this->readline();
+				if (strtoupper($r) == "BT") {
+					$loop = false;
+					$r = 0;
+				}
+				elseif (strtoupper($r) == "BLE") {
+					$loop = false;
+					$r = 1;
+				}
+				else {
+					$loop = true;
+					echo "ERROR: Bad Device type\n";
 				}
 			} while ($loop);
 			$str .= ",".$r."\n";
@@ -233,7 +254,7 @@ class BTScanner {
 		// For each tag array[mac] = array(ID on, ID Off, State) - State by default set to 0 (absent)
 		foreach ($config['TAGS'] as $tag) {
 			$tagData = explode(",",$tag);
-			$this->_tags[$tagData[0]] = array("on" => $tagData[1], "off" => $tagData[2],"state" => 0);
+			$this->_tags[$tagData[0]] = array("on" => $tagData[1], "off" => $tagData[2],"state" => 0, "ble" => $tagData[3]);
 		}
 		$nbTags = count($this->_tags);
 		$this->dbg("Adapter: $this->_adapter\n");
@@ -271,7 +292,7 @@ class BTScanner {
 		exec("$hciconfig -a $adapter",$r);
 		//$this->dbg(print_r($r,true));
 		$t = explode(" ",trim($r[2]));
-		if (!in_array("UP",$t) || !in_array("RUNNING",$t)) {die("ERROR $adapter adapter not running, use: sudo hciconfig $adapter up\n");}		
+		if (!in_array("UP",$t) || !in_array("RUNNING",$t)) {die("ERROR $adapter adapter not running, use: sudo hciconfig $adapter up\n");}
 		$this->dbg("Bluetooth adapter UP & RUNNING\n");
 	}
 
@@ -338,7 +359,7 @@ if (php_sapi_name() == 'cli') {
 		$bt->config();
 		echo "Bluetooth Daemon Configured\n";
 	}
-	else {		
+	else {
 		usage();
 		exit;
 	}
