@@ -58,7 +58,7 @@ class BTScanner {
 
 	private $_hcitool;		// Path to hcitool
 	
-	private $_loopTime = 5;		// BT scan loop time
+	private $_loopTime = 2;		// BT scan loop time
 	private $_timeOut = 300;	// Time is seconds before a tag is considered as absent - Use large value to avoid false absence detection
 	private $_debug;		// For debug purpose - Settled at Class construct time
 
