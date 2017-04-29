@@ -352,10 +352,7 @@ if (php_sapi_name() == 'cli') {
 		echo "Bluetooth Daemon Configured\n";
 	}
 	else {
-		//usage();
-		$x = trim(shell_exec("sudo timeout -s SIGINT 3s /usr/bin/hcitool -i hci0 lescan | grep -c EF:A5:C5:EA:A6:2B"));
-		var_dump($x);
-		
+		usage();
 		exit;
 	}
 }
