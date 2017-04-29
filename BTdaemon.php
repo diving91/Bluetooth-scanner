@@ -82,8 +82,8 @@ class BTScanner {
 			$this->dbg("children - ".getmypid()."\n");
 			while (true) {
 				foreach ($this->_tags as $key=>$device) {
-					if ($device['ble'] == 1) $x = exec("sudo timeout -s SIGINT 3s $this->_hcitool -i $this->_adapter lescan | grep -c $key");
-					else $x = exec("sudo $this->_hcitool -i $this->_adapter name $key");
+					if ($device['ble'] == 1) $x = shell_exec("sudo timeout -s SIGINT 3s $this->_hcitool -i $this->_adapter lescan | grep -c $key");
+					else $x = shell_exec("sudo $this->_hcitool -i $this->_adapter name $key");
 					// device not found and marked as present
 					if (empty($x) and $device['state'] == 1) {
 						$this->_tags[$key]['state'] = time();
