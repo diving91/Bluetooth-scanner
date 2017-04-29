@@ -58,8 +58,8 @@ class BTScanner {
 
 	private $_hcitool;		// Path to hcitool
 	
-	private $_loopTime = 2;		// BT scan loop time
-	private $_timeOut = 300;	// Time is seconds before a tag is considered as absent - Use large value to avoid false absence detection
+	private $_loopTime = 3;		// BT scan loop time
+	private $_timeOut = 180;	// Time is seconds before a tag is considered as absent - Use large value to avoid false absence detection
 	private $_debug;		// For debug purpose - Settled at Class construct time
 
 	public function __construct($debug = false) {
@@ -82,7 +82,7 @@ class BTScanner {
 			$this->dbg("children - ".getmypid()."\n");
 			while (true) {
 				foreach ($this->_tags as $key=>$device) {
-					if ($device['ble'] == 1) $x = shell_exec("sudo timeout -s SIGINT 3s $this->_hcitool -i $this->_adapter lescan | grep -c $key");
+					if ($device['ble'] == 1) $x = trim(shell_exec("sudo timeout -s SIGINT 3s $this->_hcitool -i $this->_adapter lescan | grep -c $key"));
 					else $x = shell_exec("sudo $this->_hcitool -i $this->_adapter name $key");
 					// device not found and marked as present
 					if (empty($x) and $device['state'] == 1) {
@@ -198,20 +198,12 @@ class BTScanner {
 			$str .= ",".$r;
 			// Select BT or BLE device
 			do {
-
 				echo "Select Device Type (BT/BLE): ";
-				$r = $this->readline();
-				if (strtoupper($r) == "BT") {
-					$loop = false;
-					$r = 0;
-				}
-				elseif (strtoupper($r) == "BLE") {
-					$loop = false;
-					$r = 1;
-				}
-				else {
-					$loop = true;
-					echo "ERROR: Bad Device type\n";
+				$r = strtoupper($this->readline());
+				switch ($r) {
+					case "BT": $loop = false; $r = 0; break;
+					case "BLE": $loop = false; $r = 1; break;
+					default: $loop = true; echo "ERROR: Bad Device type\n";
 				}
 			} while ($loop);
 			$str .= ",".$r."\n";
@@ -360,7 +352,10 @@ if (php_sapi_name() == 'cli') {
 		echo "Bluetooth Daemon Configured\n";
 	}
 	else {
-		usage();
+		//usage();
+		$x = trim(shell_exec("sudo timeout -s SIGINT 3s /usr/bin/hcitool -i hci0 lescan | grep -c EF:A5:C5:EA:A6:2B"));
+		var_dump($x);
+		
 		exit;
 	}
 }
