@@ -33,4 +33,4 @@ For each registered BT devices, the IDs for on & off Jeedom cmd will be asked an
 https://www.jeedom.com/forum/viewtopic.php?f=31&t=25492<br/>
 User: diving91<br/>
 
-<img src=https://github.com/diving91/Bluetooth-scanner/blob/master/Images/noITAG.png> <img src=https://github.com/diving91/Bluetooth-scanner/blob/master/onNut.png> <img src=https://github.com/diving91/Bluetooth-scanner/blob/master/offNut.png> <img src=https://github.com/diving91/Bluetooth-scanner/blob/master/onPhone.png> <img src=https://github.com/diving91/Bluetooth-scanner/blob/master/offPhone.png>
+<img src=https://github.com/diving91/Bluetooth-scanner/blob/master/images/noITAG.png> <img src=https://github.com/diving91/Bluetooth-scanner/blob/master/onNut.png> <img src=https://github.com/diving91/Bluetooth-scanner/blob/master/offNut.png> <img src=https://github.com/diving91/Bluetooth-scanner/blob/master/onPhone.png> <img src=https://github.com/diving91/Bluetooth-scanner/blob/master/offPhone.png>
