@@ -33,8 +33,7 @@
 ''' DESCRIPTION
  This script will send data to the main php script each time a BLE device is advertising
 	data is a json of [[bdaddr , timestamp last seen],[...]]
- Works well with Nut mini BLE devices: (https://goo.gl/l36Gtz) that are adverstising not so frequently
- It may load the system too much when used with devices that advertise very frequently
+ Works well with Nut mini BLE devices: (https://goo.gl/l36Gtz)
  
  USAGE
  python ble.py hciAdapterID phpCallback jsonTagsBDaddr &
@@ -61,8 +60,8 @@ EVT_LE_ADVERTISING_REPORT=0x02
 TAG_DATA = [] # Example [["EF:A2:C5:EB:A3:2F",0],["FF:FE:8A:40:FA:97",0]] - [bdaddr , timestamp last seen] - imported from argv[3]
 
 # choose between DEBUG (log every information) or CRITICAL (only error)
-#logLevel=logging.DEBUG
-logLevel=logging.CRITICAL
+logLevel=logging.DEBUG
+#logLevel=logging.CRITICAL
 FORMAT = '%(asctime)s - %(message)s'
 logging.basicConfig(format=FORMAT,level=logLevel)
 
@@ -74,7 +73,7 @@ def hci_toggle_le_scan(sock, enable):
 	bluez.hci_send_cmd(sock, OGF_LE_CTL, OCF_LE_SET_SCAN_ENABLE, cmd_pkt)
 
 me = os.path.basename(__file__)
-logging.debug('Start %s BLE scanner'%(me))
+#logging.debug('Start %s scanner'%(me))
 # ARG1: Kill BLE scanner or check hci adapter
 if sys.argv[1:]:
 	if sys.argv[1] == "kill": #Kill mode
@@ -153,10 +152,13 @@ while True:
 			num_reports = struct.unpack("B", pkt[0])[0]
 			for i in range(0, num_reports):
 				macAdressSeen=packed_bdaddr_to_string(pkt[3:9])
+				ts = int(time.time()) # time of event
 				for tag in TAG_DATA:
-					if macAdressSeen.lower() == tag[0].lower(): 
-						tag[1]=int(time.time()) # update lastseen
-						logging.debug('Tag %s seen @ %i',tag[0],tag[1])
-				jsonTag = json.dumps(TAG_DATA) # json encode TAG_DATA list
-				os.system("php " + callback + " data " + jsonTag.replace('"', '\\"').replace(' ', '')) #call php callback
+					if macAdressSeen.lower() == tag[0].lower():
+						# More than 2 seconds from last seen, so we can call php callback. This prevent overload from high freq advertising devices
+						if ts > tag[1]+2:
+							tag[1]=ts # update lastseen
+							logging.debug('Tag %s seen @ %i',tag[0],tag[1])
+							jsonTag = json.dumps(TAG_DATA,separators=(',', ':')) # json encode TAG_DATA list
+							os.system("php " + callback + " callback '" + jsonTag + "'") #call php callback
 	sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, old_filter )
