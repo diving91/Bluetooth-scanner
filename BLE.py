@@ -59,9 +59,9 @@ EVT_LE_ADVERTISING_REPORT=0x02
 
 TAG_DATA = [] # Example [["EF:A2:C5:EB:A3:2F",0],["FF:FE:8A:40:FA:97",0]] - [bdaddr , timestamp last seen] - imported from argv[3]
 
-# choose between DEBUG (log every information) or CRITICAL (only error)
-logLevel=logging.DEBUG
-#logLevel=logging.CRITICAL
+# IMPORTANT -> choose between DEBUG (log every information) or CRITICAL (only error)
+#logLevel=logging.DEBUG
+logLevel=logging.CRITICAL
 FORMAT = '%(asctime)s - %(message)s'
 logging.basicConfig(format=FORMAT,level=logLevel)
 
