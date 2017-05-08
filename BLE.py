@@ -6,7 +6,7 @@
    URL : https://github.com/jmleglise/mylittle-domoticz/edit/master/Presence%20detection%20%28beacon%29/test_beacon.py
    Version : 1.0
 
- Copyright (c) 2017 Diving-91 (User:diving91 https://www.jeedom.fr/forum/)
+ Copyright (c) 2017-05 Diving-91 (User:diving91 https://www.jeedom.fr/forum/)
  URL: https://github.com/diving91/Bluetooth-scanner
 
  MIT License
@@ -32,24 +32,24 @@
 
 ''' DESCRIPTION
  This script will send data to the main php script each time a BLE device is advertising
-	data is a json of [[bdaddr , timestamp last seen],[...]]
+        data is a json of [[bdaddr , timestamp last seen],[...]]
  Works well with Nut mini BLE devices: (https://goo.gl/l36Gtz)
  
  USAGE
- python ble.py hciAdapterID phpCallback jsonTagsBDaddr &
-	Example: sudo python ble.py 0 BTdaemon.php [\"EF:A2:C5:EB:A3:2F\",\"FF:FE:8A:40:FA:97\"]
- python ble.py kill
-	This will kill the previously launched background process
+ $ python BLE.py hciAdapterID processUSer phpCallback debug jsonTagsBDaddr
+        Example: sudo python ble.py 0 pi BTdaemon.php [\"EF:A2:C5:EB:A3:2F\",\"FF:FE:8A:40:FA:97\"]
+ $ python BLE.py kill
+        This will kill the previously launched BLE.py processes
 '''
-
 import os
 import sys
+import pwd
 import struct
 import logging
 import json
 import bluetooth._bluetooth as bluez
 import time
-import signal
+#import signal
 
 LE_META_EVENT = 0x3e
 OGF_LE_CTL=0x08
@@ -59,11 +59,25 @@ EVT_LE_ADVERTISING_REPORT=0x02
 
 TAG_DATA = [] # Example [["EF:A2:C5:EB:A3:2F",0],["FF:FE:8A:40:FA:97",0]] - [bdaddr , timestamp last seen] - imported from argv[3]
 
-# IMPORTANT -> choose between DEBUG (log every information) or CRITICAL (only error)
-#logLevel=logging.DEBUG
-logLevel=logging.CRITICAL
-FORMAT = '%(asctime)s - %(message)s'
-logging.basicConfig(format=FORMAT,level=logLevel)
+me = os.path.basename(__file__)
+
+# Check 5 args are supplied or 1 arg 'kill'
+if not(len(sys.argv) == 6) and not(len(sys.argv) == 2 and sys.argv[1] =='kill'):
+	print "ERROR: Please use arguments"
+	print "$ python "+me+" adapterNb processUser phpcallback debug jsonTagsBdaddr"
+	print "$ python "+me+" kill"
+	sys.exit(1)
+elif len(sys.argv) == 6: # ARG4: define logging level
+	FORMAT = '%(asctime)s - %(message)s'
+	if sys.argv[4] == "1":
+		logLevel=logging.DEBUG
+		logging.basicConfig(format=FORMAT,level=logLevel)
+	elif sys.argv[4] == "0":
+		logLevel=logging.CRITICAL	
+		logging.basicConfig(format=FORMAT,level=logLevel)
+	else:
+		print "ERROR: Wrong logging level supplied - Use 0 or 1"
+		sys.exit(1)
 
 def packed_bdaddr_to_string(bdaddr_packed):
 	return ':'.join('%02x'%i for i in struct.unpack("<BBBBBB", bdaddr_packed[::-1]))
@@ -72,53 +86,52 @@ def hci_toggle_le_scan(sock, enable):
 	cmd_pkt = struct.pack("<BB", enable, 0x00)
 	bluez.hci_send_cmd(sock, OGF_LE_CTL, OCF_LE_SET_SCAN_ENABLE, cmd_pkt)
 
-me = os.path.basename(__file__)
-#logging.debug('Start %s scanner'%(me))
 # ARG1: Kill BLE scanner or check hci adapter
-if sys.argv[1:]:
-	if sys.argv[1] == "kill": #Kill mode
-		x = os.popen("ps aux | grep " + me + " | grep -v grep| grep -v sudo | awk '{print $2}'").read().splitlines() # all processes
-		x = list(set(x).difference([str(os.getpid())])) # all processes but current one
-		if x:
-			x = int(x[0]) # convert to pid
-			print 'Kill %s process %i'%(me,x)
-			os.system("sudo kill %i" % (x))
-			sys.exit(0)
-		else:
-			print 'There is no %s process to kill'%(me)
-			sys.exit(0)
-	else: # define hci adapter
-		try:
-			hciId = int(sys.argv[1]) # 0 for hci0
-			logging.debug('Will Use hci adapter hci%s'%(sys.argv[1]))
-		except:
-			logging.critical('ERROR - Wrong HCI adapter number supplied: %s'%(sys.argv[1]))
-			sys.exit(1)
-else: # no argv[1], assume no hci adapter
-	logging.critical('ERROR - NO HCI adapter number supplied')
-	sys.exit(1)	
-
-# ARG2: Check php script callback
-if sys.argv[2:]:
-	callback=os.path.dirname(os.path.abspath(__file__))+"/"+str(sys.argv[2])
-	if os.path.exists(callback):
-		callback = sys.argv[2]
-		logging.debug('Will use %s as php script callback',callback)
+if sys.argv[1] == "kill": #Kill mode
+	x = os.popen("ps aux | grep " + me + " | grep -v grep| grep -v sudo | awk '{print $2}'").read().splitlines() # all processes
+	x = list(set(x).difference([str(os.getpid())])) # all processes but current one
+	if x:
+		x = int(x[0]) # convert to pid
+		print 'Kill %s process %i'%(me,x)
+		os.system("sudo kill %i" % (x))
+		sys.exit(0)
 	else:
-		logging.critical('ERROR - Wrong php script file name supplied: %s'%(callback))
+		print 'There is no %s process to kill'%(me)
+		sys.exit(0)
+else: # define hci adapter
+	try:
+		hciId = int(sys.argv[1]) # 0 for hci0
+		logging.debug('Will Use hci adapter hci%s'%(sys.argv[1]))
+	except:
+		logging.critical('ERROR - Wrong HCI adapter number supplied: %s'%(sys.argv[1]))
 		sys.exit(1)
-else: # no argv[2], no php callback
-	logging.critical('ERROR - No php script file name supplied')
-	sys.exit(1)
 
-# ARG3: json BLE TAGs mac address
-if sys.argv[3:]:
-	tags = json.loads(sys.argv[3])
+# ARG2: Check processUSer
+try:
+	pwd.getpwnam(sys.argv[2])
+	processUser = sys.argv[2]
+	logging.debug('Will use %s as process User',processUser)	
+except:
+	logging.critical('ERROR - Wrong processUser supplied')
+	sys.exit(1)
+	
+# ARG3: Check php script callback
+callback=os.path.dirname(os.path.abspath(__file__))+"/"+str(sys.argv[3])
+if os.path.exists(callback):
+	callback = sys.argv[3]
+	logging.debug('Will use %s as php script callback',callback)
+else:
+	logging.critical('ERROR - Wrong php script file name supplied: %s'%(callback))
+	sys.exit(1)
+	
+# ARG5: json BLE TAGs mac address
+try:
+	tags = json.loads(sys.argv[5])
 	for tag in tags:
 		TAG_DATA.append([tag.encode('ascii', 'ignore'),0])
-	logging.debug('Will scan %s tag(s) with bdaddr %s'%(sys.argv[3].count(":")/5,sys.argv[3]))
-else: # no argv[3], no tags bdaddr
-	logging.critical('ERROR - No Tags supplied')
+	logging.debug('Will scan %s tag(s) with bdaddr %s'%(sys.argv[5].count(":")/5,sys.argv[5]))
+except:
+	logging.critical('ERROR - Wrong json for TAGS: %s'%sys.argv[5])
 	sys.exit(1)
 
 # MAIN part of the script
@@ -160,5 +173,5 @@ while True:
 							tag[1]=ts # update lastseen
 							logging.debug('Tag %s seen @ %i',tag[0],tag[1])
 							jsonTag = json.dumps(TAG_DATA,separators=(',', ':')) # json encode TAG_DATA list
-							os.system("php " + callback + " callback '" + jsonTag + "'") #call php callback
+							os.system("sudo -u " + processUser + " php " + callback + " callback '" + jsonTag + "'") #call php callback
 	sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, old_filter )
