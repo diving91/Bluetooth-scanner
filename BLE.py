@@ -49,7 +49,6 @@ import logging
 import json
 import bluetooth._bluetooth as bluez
 import time
-#import signal
 
 LE_META_EVENT = 0x3e
 OGF_LE_CTL=0x08
@@ -145,7 +144,7 @@ except:
 
 # Enable LE scan
 hci_toggle_le_scan(sock, 0x01)
-# Infinite loop to lsiten socket
+# Infinite loop to listen socket
 while True:
 	old_filter = sock.getsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, 14)
 	flt = bluez.hci_filter_new()
