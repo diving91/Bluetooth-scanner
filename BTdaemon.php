@@ -53,7 +53,7 @@ $debug = false; //true for debug mode, false for production mode
 class BTScanner {
 	private $_me;			// name of this script file
 	private $_logfile = 'BT.log';
-	private $_loglength = 50;	// Max log size in lines
+	private $_loglength = 100;	// Max log size in lines
 	private $_cfgfile = 'BT.ini';
 	// from cfgfile
 	private $_adapter; 		// BT adapter eg: hci0
@@ -65,7 +65,7 @@ class BTScanner {
 	private $_shm_id;		// Share memory ID (used for the python callback)
 	
 	private $_loopTime = 3;		// BT scan loop time
-	private $_timeOut = 180;	// Time is seconds before a tag is considered as absent - Use large value to avoid false absence detection
+	private $_timeOut = 240;	// Time is seconds before a tag is considered as absent - Use large value to avoid false absence detection
 	private $_debug;		// For debug purpose - Settled at Class construct time
 
 	public function __construct($debug = false) {
@@ -305,12 +305,14 @@ class BTScanner {
 		foreach ($this->_tags as $key=>$device) { //extract BLE devices
 			if ($device['ble'] == 1) $x[] = $key;
 		}
-		$x = addslashes(json_encode($x));
-		$processUser = posix_getpwuid(posix_geteuid())['name'];
-		$dbg = $this->_debug ? 1 : 0;
-		$this->dbg("Start as: sudo python BLE.py $id $processUser $this->_me $$dbg $x\n");
-		//echo "Start as: sudo python BLE.py $id $processUser $this->_me $dbg $x\n";
-		exec("sudo python BLE.py $id $processUser $this->_me $dbg $x"); // ble.py adapterNb processUser phpcallback debug jsonTagsBdaddr
+		if (isset($x)) { // case when no BLE devices are used
+			$x = addslashes(json_encode($x));
+			$processUser = posix_getpwuid(posix_geteuid())['name'];
+			$dbg = $this->_debug ? 1 : 0;
+			$this->dbg("Start as: sudo python BLE.py $id $processUser $this->_me $$dbg $x\n");
+			//echo "Start as: sudo python BLE.py $id $processUser $this->_me $dbg $x\n";
+			exec("sudo python BLE.py $id $processUser $this->_me $dbg $x"); // ble.py adapterNb processUser phpcallback debug jsonTagsBdaddr
+		}
 	}
 
 	// Load parameters from cfgfile 
