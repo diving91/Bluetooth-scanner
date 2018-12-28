@@ -85,6 +85,15 @@ def hci_toggle_le_scan(sock, enable):
 	cmd_pkt = struct.pack("<BB", enable, 0x00)
 	bluez.hci_send_cmd(sock, OGF_LE_CTL, OCF_LE_SET_SCAN_ENABLE, cmd_pkt)
 
+def le_handle_connection_complete(pkt):
+	status, handle, role, peer_bdaddr_type = struct.unpack("<BHBB", pkt[0:5])
+	device_address = packed_bdaddr_to_string(pkt[5:11])
+	interval, latency, supervision_timeout, master_clock_accuracy = struct.unpack("<HHHB", pkt[11:])
+	#print "le_handle_connection output"
+	#print "status: 0x%02x\nhandle: 0x%04x" % (status, handle)
+	#print "role: 0x%02x" % role
+	#print "device address: ", device_address
+
 # ARG1: Kill BLE scanner or check hci adapter
 if sys.argv[1] == "kill": #Kill mode
 	x = os.popen("ps aux | grep " + me + " | grep -v grep| grep -v sudo | awk '{print $2}'").read().splitlines() # all processes
