@@ -25,9 +25,14 @@ Does NOT work with iTags (https://goo.gl/ENNL71): Since those devices are switch
 Bluetooth adapter: https://goo.gl/e52VTZ<br/>
 
 * Link with the controller<br/>
-Define a widget with on & off cmd IDs to control the widget via Jeedom http API<br/>
+Define a virtual with on & off cmd action IDs to control the widget via Jeedom http API<br/>
+Also create a binary info field that will represent the state of the virtual (only this one is to be displayed) <br/>
+<img src=https://github.com/diving91/Bluetooth-scanner/blob/master/images/jeedom%20virtual.jpg><br/>
+In the advance configuration (toothed wheel) of the binary info field, use a binary widget with images for the on & off states (example below or any of your choice that you can also find on the jeedom market)<br/>
+
 When started in configuration mode, the script will ask for the list of Bluetooth devices to monitor (via their BT Mac address)<br/>
 For each registered devices, the IDs for on & off Jeedom cmd will be asked and stored into a BLE.ini file<br/>
+
 
 * Optionally a log file is generated to keep track of devices entering or leaving the adapter scan range<br/>
 
