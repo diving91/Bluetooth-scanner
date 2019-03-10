@@ -305,7 +305,7 @@ class BTScanner {
 		foreach ($this->_tags as $key=>$device) { //extract BLE devices
 			if ($device['ble'] == 1) $x[] = $key;
 		}
-		if isset($x) { // case when no BLE devices are used
+		if (isset($x)) { // case when no BLE devices are used
 			$x = addslashes(json_encode($x));
 			$processUser = posix_getpwuid(posix_geteuid())['name'];
 			$dbg = $this->_debug ? 1 : 0;
@@ -332,7 +332,7 @@ class BTScanner {
 			$this->_tags[$tagData[0]] = array("on" => $tagData[1], "off" => $tagData[2],"state" => 0, "ble" => $tagData[3]);
 			//For BLE devices add a last Seen field
 			if ($tagData[3] == '1') {$this->_tags[$tagData[0]] = array_merge($this->_tags[$tagData[0]],array("last" => 0));}
-			$this->callJedoomUrl($tagData[2]); // Send to the controller a signal that devices are 'off'
+			$this->callJedoomUrl($tagData[2]); // Send signal to the controller to set devices Off
 		}
 		$nbTags = count($this->_tags);
 		$this->dbg("Adapter: $this->_adapter\n");
