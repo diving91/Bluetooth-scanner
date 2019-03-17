@@ -1,6 +1,6 @@
 <?php
 /*
-* Copyright (c) 2017 Diving-91 (User:diving91 https://www.jeedom.fr/forum/)
+* Copyright (c) 2017-2019 Diving-91 (User:diving91 https://www.jeedom.fr/forum/)
 * URL: https://github.com/diving91/Bluetooth-scanner
 * 
 * MIT License
@@ -25,6 +25,9 @@
 * SOFTWARE.
 *
 */
+
+// Script version
+$version = "1.1.0";
 
 // Modify according to your need
 $debug = false; //true for debug mode, false for production mode
@@ -82,7 +85,7 @@ class BTScanner {
 			$this->_shm_id = @shmop_open(ftok(__FILE__, 'B'), 'w', 0, 0); // Already created, so just open
 		}
 	}
-
+	
 	// Getter for shared memory ID
 	public function getShmID() {
 		return $this->_shm_id;
@@ -258,14 +261,14 @@ class BTScanner {
 					//echo $key."->".$device['last']."\n";
 					// device not found and marked as present
 					if (($device['state'] == 1) and ((time() - $device['last']) > $this->_timeOut)) {
-						$this->callJedoomUrl($device['off']);
+						$this->callJeedomUrl($device['off']);
 						$this->_tags[$key]['state'] = 0;
 						$this->dbg("Inactive Tag found: $key\n");
 						$this->log("$key inactive\n");
 					}
 					// device found and marked as not present
 					else if (($device['state'] == 0) and ((time() - $device['last']) <= $this->_timeOut)) {
-						$this->callJedoomUrl($device['on']);
+						$this->callJeedomUrl($device['on']);
 						$this->_tags[$key]['state'] = 1;
 						$this->dbg("Active Tag found: $key\n");
 						$this->log("$key ACTIVE\n");
@@ -279,14 +282,14 @@ class BTScanner {
 					}
 					// device not found and marked as timestamp transition
 					else if (empty($x) and ((time() - $device['state']) > $this->_timeOut) and $device['state'] != 0) {
-						$this->callJedoomUrl($device['off']);
+						$this->callJeedomUrl($device['off']);
 						$this->_tags[$key]['state'] = 0;
 						$this->dbg("Inactive Tag found: $key\n");
 						$this->log("$key inactive\n");
 					}
 					// device found and marked as not present
 					else if (!empty($x) and $device['state'] == 0) {
-						$this->callJedoomUrl($device['on']);
+						$this->callJeedomUrl($device['on']);
 						$this->_tags[$key]['state'] = 1;
 						$this->dbg("Active Tag found: $key\n");
 						$this->log("$key ACTIVE\n");
@@ -332,7 +335,7 @@ class BTScanner {
 			$this->_tags[$tagData[0]] = array("on" => $tagData[1], "off" => $tagData[2],"state" => 0, "ble" => $tagData[3]);
 			//For BLE devices add a last Seen field
 			if ($tagData[3] == '1') {$this->_tags[$tagData[0]] = array_merge($this->_tags[$tagData[0]],array("last" => 0));}
-			$this->callJedoomUrl($tagData[2]); // Send signal to the controller to set devices Off
+			$this->callJeedomUrl($tagData[2]); // Send signal to the controller to set devices Off
 		}
 		$nbTags = count($this->_tags);
 		$this->dbg("Adapter: $this->_adapter\n");
@@ -345,7 +348,7 @@ class BTScanner {
 	}
 
 	// Call Jeedom specified URL
-	private function callJedoomUrl($id) {
+	private function callJeedomUrl($id) {
 		//echo "$this->_jeedomurl"."$id\n";
 		$r = file_get_contents("$this->_jeedomurl"."$id");
 		if (!empty($r)) { $this->dbg("URL call ERROR: $r\n"); }
@@ -426,6 +429,7 @@ if (php_sapi_name() == 'cli') {
 	if ($arg == 'start') {
 		$bt->stop();
 		echo "Starting Bluetooth Daemon\n";
+		echo "version: $version\n";
 		$bt->checkAndLoadConfig();
 		$bt->run();
 		}
